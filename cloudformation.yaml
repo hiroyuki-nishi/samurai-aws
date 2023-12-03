@@ -1,0 +1,97 @@
+Parameters:
+  BucketName:
+    Type: String
+    # S3は世界で一意である必要があるため適宜変更する 
+    Default: ns-spa-website-bucket
+
+Resources:
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${BucketName}
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: WebsiteBucket
+      PolicyDocument:
+        Statement:
+          - Action: s3:GetObject
+            Effect: Allow
+            Principal:
+              CanonicalUser:
+                Fn::GetAtt:
+                  - S3OriginAccessIdentity
+                  - S3CanonicalUserId
+            Resource:
+              Fn::Join:
+                - ''
+                - - Fn::GetAtt:
+                      - WebsiteBucket
+                      - Arn
+                  - /*
+          - Action: s3:GetObject
+            Effect: Allow
+            Principal:
+              CanonicalUser:
+                Fn::GetAtt:
+                  - DistributionOriginS3Origin
+                  - S3CanonicalUserId
+            Resource:
+              Fn::Join:
+                - ''
+                - - Fn::GetAtt:
+                      - WebsiteBucket
+                      - Arn
+                  - /*
+        Version: '2012-10-17'
+  S3OriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: website-distribution-originAccessIdentity
+  DistributionOriginS3Origin:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Identity for WebsiteTargetdistributionOrigin
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: website-distribution
+        CustomErrorResponses:
+          - ErrorCachingMinTTL: 0
+            ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          TargetOriginId: WebsiteTargetdistributionOrigin
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        Origins:
+          - DomainName:
+              Fn::GetAtt:
+                - WebsiteBucket
+                - RegionalDomainName
+            Id: WebsiteTargetdistributionOrigin
+            S3OriginConfig:
+              OriginAccessIdentity:
+                Fn::Join:
+                  - ''
+                  - - origin-access-identity/cloudfront/
+                    - Ref: DistributionOriginS3Origin
+        PriceClass: PriceClass_All
