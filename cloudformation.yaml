@@ -23,20 +23,6 @@ Resources:
             Principal:
               CanonicalUser:
                 Fn::GetAtt:
-                  - S3OriginAccessIdentity
-                  - S3CanonicalUserId
-            Resource:
-              Fn::Join:
-                - ''
-                - - Fn::GetAtt:
-                      - WebsiteBucket
-                      - Arn
-                  - /*
-          - Action: s3:GetObject
-            Effect: Allow
-            Principal:
-              CanonicalUser:
-                Fn::GetAtt:
                   - DistributionOriginS3Origin
                   - S3CanonicalUserId
             Resource:
@@ -47,11 +33,6 @@ Resources:
                       - Arn
                   - /*
         Version: '2012-10-17'
-  S3OriginAccessIdentity:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
-    Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: website-distribution-originAccessIdentity
   DistributionOriginS3Origin:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
