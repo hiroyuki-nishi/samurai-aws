@@ -1,6 +1,8 @@
 // import { useHistory } from 'react-router-dom';
 
-export const Login: () => JSX.Element = () => {
+import {Button} from "@mui/material";
+
+export const Login = () => {
   // const history = useHistory();
 
   // const moveLogin = () => {
@@ -11,12 +13,7 @@ export const Login: () => JSX.Element = () => {
 
   return (
     <>
-      <h1 className="text-3xl font-bold underline">
-        Hello world!
-      </h1>
-      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Button
-      </button>
+      <Button variant="contained">Hello world</Button>
     </>
   );
 }
