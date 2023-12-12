@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  DBInstanceIdentifier:
+    Type: String
+    Description: RDS instance identifier
+    Default: MyDBInstance
+  MasterUsername:
+    Type: String
+    Description: RDS master username
+    Default: clusteradmin
+  MasterUserPassword:
+    Type: String
+    Description: RDS master password
+    NoEcho: true
+    MinLength: 8
+Resources:
+  MyDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20
+      DBInstanceIdentifier: !Ref DBInstanceIdentifier
+      Engine: aurora-postgresql
+      MasterUsername: !Ref MasterUsername
+      MasterUserPassword: !Ref MasterUserPassword
+      MultiAZ: false
+      DBInstanceClass: db.t4g.medium
+      VPCSecurityGroups:
+        - !GetAtt MyDBSecurityGroup.GroupId
+  MyDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to the RDS instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
