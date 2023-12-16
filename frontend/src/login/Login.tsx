@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
 import { Paper } from '@mui/material';
+import axios from "axios";
 
 function Copyright(props: any) {
   return (
@@ -29,14 +30,25 @@ function Copyright(props: any) {
 const defaultTheme = createTheme();
 
 export const Login = () => {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     console.log({
       email: data.get('email'),
       password: data.get('password'),
     });
+    await fetchData();
   };
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('https://your-api-url.com');
+      console.log(response.data);
+    } catch (error) {
+      console.error(`Error fetching data: ${error}`);
+    }
+  }
+
 
   return (
     <Paper
