@@ -105,5 +105,5 @@ dist
 
 .idea
 .aws-sam/
-/build
+frontend/build
 samconfig.toml
