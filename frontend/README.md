@@ -2,7 +2,11 @@
 Node.js v16以上
 
 ### 準備
-yarn install
+npm install
 
 ### プロジェクトの起動方法
-yarn start
+npm run start
+
+
+### ビルド方法
+npm run build
