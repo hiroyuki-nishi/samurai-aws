@@ -1,37 +1,98 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
+  DBMasterUsername:
+    Type: String
+    Description: Master username for the Aurora cluster
+  DBMasterPassword:
+    Type: String
+    NoEcho: true
+    Description: Master password for the Aurora cluster
   DBInstanceIdentifier:
     Type: String
-    Description: RDS instance identifier
-    Default: MyDBInstance
-  MasterUsername:
+    Description: Identifier for the Aurora cluster
+  DBInstanceClass:
     Type: String
-    Description: RDS master username
-    Default: clusteradmin
-  MasterUserPassword:
+    Description: Instance class for the Aurora cluster
+    Default: db.t4g.medium
+  DBClusterName:
     Type: String
-    Description: RDS master password
-    NoEcho: true
-    MinLength: 8
+    Description: Name for the Aurora cluster
+
 Resources:
-  MyDB:
-    Type: AWS::RDS::DBInstance
+  VPC:
+    Type: 'AWS::EC2::VPC'
     Properties:
-      AllocatedStorage: 20
-      DBInstanceIdentifier: !Ref DBInstanceIdentifier
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: YourVPCName
+
+  SubnetA:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: VPC
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: YourAvailabilityZoneA
+      Tags:
+        - Key: Name
+          Value: YourSubnetA
+
+  SubnetB:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: VPC
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: YourAvailabilityZoneB
+      Tags:
+        - Key: Name
+          Value: YourSubnetB
+
+  SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    DependsOn: VPC
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Security group for Aurora cluster
+      Tags:
+        - Key: Name
+          Value: YourSecurityGroup
+
+  AuroraCluster:
+    Type: 'AWS::RDS::DBCluster'
+    Properties:
       Engine: aurora-postgresql
-      MasterUsername: !Ref MasterUsername
-      MasterUserPassword: !Ref MasterUserPassword
-      MultiAZ: false
-      DBInstanceClass: db.t4g.medium
-      VPCSecurityGroups:
-        - !GetAtt MyDBSecurityGroup.GroupId
-  MyDBSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterPassword
+      DatabaseName: YourDatabaseName
+      DBClusterIdentifier: !Ref DBClusterName
+      EngineVersion: 11.10  # Change as needed
+      DBSubnetGroupName: !Ref AuroraDBSubnetGroup
+      VpcSecurityGroupIds:
+        - !Ref SecurityGroup
+      Port: 5432
+      StorageEncrypted: true
+      AvailabilityZones:
+        - !GetAtt SubnetA.AvailabilityZone
+        - !GetAtt SubnetB.AvailabilityZone
+
+  AuroraReadReplica:
+    Type: 'AWS::RDS::DBInstance'
     Properties:
-      GroupDescription: Enable access to the RDS instance
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          CidrIp: 0.0.0.0/0
+      Engine: aurora-postgresql
+      DBInstanceIdentifier: !Ref DBInstanceIdentifier
+      DBInstanceClass: !Ref DBInstanceClass
+      DBClusterIdentifier: !Ref DBClusterName
+      PubliclyAccessible: false
+      AutoMinorVersionUpgrade: true
+
+  AuroraDBSubnetGroup:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      DBSubnetGroupDescription: 'Subnet group for Aurora DB'
+      SubnetIds:
+        - !Ref SubnetA
+        - !Ref SubnetB
