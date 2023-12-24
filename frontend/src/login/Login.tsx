@@ -12,6 +12,7 @@ import Container from '@mui/material/Container';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
 import { Paper } from '@mui/material';
 import axios from "axios";
+import { useNavigate } from 'react-router-dom';
 
 function Copyright(props: any) {
   return (
@@ -30,6 +31,7 @@ function Copyright(props: any) {
 const defaultTheme = createTheme();
 
 export const Login = () => {
+  const navigate = useNavigate();
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -38,6 +40,7 @@ export const Login = () => {
       password: data.get('password'),
     });
     await fetchData();
+    navigate("/home");
   };
 
   const fetchData = async () => {
