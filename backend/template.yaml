@@ -17,6 +17,9 @@ Resources:
               responses:
                 '200':
                   description: 'Successful response'
+                  headers:
+                    Access-Control-Allow-Origin:
+                        type: string
                   content:
                     application/json:
                       example:
@@ -26,6 +29,10 @@ Resources:
                 passthroughBehavior: 'when_no_match'
                 httpMethod: 'POST'
                 type: 'aws_proxy'
+                default:
+                  statusCode: 200
+                  responseParameters:
+                    method.response.header.Access-Control-Allow-Origin : "'*'"
 
   HelloWorldFunction:
     Type: 'AWS::Serverless::Function'

@@ -42,7 +42,7 @@ export const Login = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('https://your-api-url.com');
+      const response = await axios.get('https://tprk036phh.execute-api.ap-northeast-1.amazonaws.com/Prod/hello');
       console.log(response.data);
     } catch (error) {
       console.error(`Error fetching data: ${error}`);
