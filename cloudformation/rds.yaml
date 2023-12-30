@@ -1,98 +1,118 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
-  DBMasterUsername:
+  Prefix:
     Type: String
-    Description: Master username for the Aurora cluster
-  DBMasterPassword:
+    Default: ns
+  ProjectName:
     Type: String
-    NoEcho: true
-    Description: Master password for the Aurora cluster
-  DBInstanceIdentifier:
+    Default: test
+  Environment:
     Type: String
-    Description: Identifier for the Aurora cluster
-  DBInstanceClass:
+    Default: dev
+  DatabaseName:
     Type: String
-    Description: Instance class for the Aurora cluster
-    Default: db.t4g.medium
-  DBClusterName:
-    Type: String
-    Description: Name for the Aurora cluster
-
+  VPCPrivateSubnetIds:
+    Type: List<String>
 Resources:
-  VPC:
-    Type: 'AWS::EC2::VPC'
+  RDSClusterParameterGroup:
+    Type: AWS::RDS::DBClusterParameterGroup
     Properties:
-      CidrBlock: 10.0.0.0/16
-      EnableDnsSupport: true
-      EnableDnsHostnames: true
+      DBClusterParameterGroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-rds-cluster-pg"
+      Family: aurora-postgresql13
+      Description: "RDS default cluster parameter group"
       Tags:
         - Key: Name
-          Value: YourVPCName
-
-  SubnetA:
-    Type: 'AWS::EC2::Subnet'
-    DependsOn: VPC
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-rds-cluster-pg"
+  DBParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
     Properties:
-      VpcId: !Ref VPC
-      CidrBlock: 10.0.0.0/24
-      AvailabilityZone: YourAvailabilityZoneA
+      DBParameterGroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-db-parameter-group"
+      Family: aurora-postgresql13
       Tags:
         - Key: Name
-          Value: YourSubnetA
-
-  SubnetB:
-    Type: 'AWS::EC2::Subnet'
-    DependsOn: VPC
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-db-parameter-group"
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
     Properties:
-      VpcId: !Ref VPC
-      CidrBlock: 10.0.1.0/24
-      AvailabilityZone: YourAvailabilityZoneB
+      DBSubnetGroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-db-subnet-group"
+      SubnetIds: !Ref VPCPrivateSubnetIds
       Tags:
         - Key: Name
-          Value: YourSubnetB
-
-  SecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    DependsOn: VPC
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-db-subnet-group"
+  RDSInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      VpcId: !Ref VPC
-      GroupDescription: Security group for Aurora cluster
-      Tags:
-        - Key: Name
-          Value: YourSecurityGroup
-
-  AuroraCluster:
-    Type: 'AWS::RDS::DBCluster'
+      GroupDescription: "Security group for RDS cluster instances"
+      VpcId: !Ref YourVPCId  # Replace with your VPC ID
+  RDSCluster:
+    Type: AWS::RDS::DBCluster
     Properties:
+      AllowMajorVersionUpgrade: true
+      ApplyImmediately: true
+      BackupRetentionPeriod: 7
+      DBClusterIdentifier: !Sub "${Prefix}-${ProjectName}-${Environment}-aurora-postgresql-cluster"
+      DatabaseName: !Ref DatabaseName
+      DBClusterParameterGroupName: !Ref RDSClusterParameterGroup
+      DeletionProtection: false
       Engine: aurora-postgresql
-      MasterUsername: !Ref DBMasterUsername
-      MasterUserPassword: !Ref DBMasterPassword
-      DatabaseName: YourDatabaseName
-      DBClusterIdentifier: !Ref DBClusterName
-      EngineVersion: 11.10  # Change as needed
-      DBSubnetGroupName: !Ref AuroraDBSubnetGroup
-      VpcSecurityGroupIds:
-        - !Ref SecurityGroup
+      EngineMode: provisioned
+      EngineVersion: "13.8"
+      MasterUsername: !Sub "${Environment}_master_user"
+      MasterUserPassword: "your_password_here"  # Replace with the actual password
       Port: 5432
+      PreferredBackupWindow: "17:00-18:00"
+      PreferredMaintenanceWindow: "sat:18:00-sat:19:00"
+      SkipFinalSnapshot: true
       StorageEncrypted: true
-      AvailabilityZones:
-        - !GetAtt SubnetA.AvailabilityZone
-        - !GetAtt SubnetB.AvailabilityZone
-
-  AuroraReadReplica:
-    Type: 'AWS::RDS::DBInstance'
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VpcSecurityGroupIds:
+        - !GetAtt [RDSInstanceSecurityGroup, GroupId]
+      Tags:
+        - Key: Name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-aurora-postgresql-cluster"
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
     Properties:
+      DBClusterIdentifier: !Ref RDSCluster
+      DBInstanceIdentifier: !Sub "${Prefix}-${ProjectName}-${Environment}-rds-cluster-instance"
+      DBParameterGroupName: !Ref DBParameterGroup
       Engine: aurora-postgresql
-      DBInstanceIdentifier: !Ref DBInstanceIdentifier
-      DBInstanceClass: !Ref DBInstanceClass
-      DBClusterIdentifier: !Ref DBClusterName
-      PubliclyAccessible: false
-      AutoMinorVersionUpgrade: true
-
-  AuroraDBSubnetGroup:
-    Type: 'AWS::RDS::DBSubnetGroup'
+      EngineVersion: "13.8"
+      InstanceClass: db.t4g.medium
+      MonitoringRoleArn: !GetAtt [YourMonitoringRole, Arn]  # Replace with your monitoring role
+      MonitoringInterval: 60
+      Tags:
+        - Key: Name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-rds-cluster-instance"
+  RDSClusterInstanceSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      DBSubnetGroupDescription: 'Subnet group for Aurora DB'
-      SubnetIds:
-        - !Ref SubnetA
-        - !Ref SubnetB
+      GroupId: !GetAtt [RDSInstanceSecurityGroup, GroupId]
+      SourceSecurityGroupId: !GetAtt [YourAppSecurityGroup, GroupId]  # Replace with your application security group
+  RDSProxy:
+    Type: AWS::RDS::DBProxy
+    Properties:
+      DBProxyName: !Sub "${Prefix}-${ProjectName}-${Environment}-db-proxy"
+      EngineFamily: POSTGRESQL
+      IdleClientTimeout: 1800
+      RequireTLS: false
+      RoleArn: !GetAtt [YourProxyRole, Arn]  # Replace with your proxy role
+      VpcSecurityGroupIds:
+        - !GetAtt [YourProxySecurityGroup, GroupId]  # Replace with your proxy security group
+      VpcSubnetIds: !Ref VPCPrivateSubnetIds
+      Auth:
+        AuthScheme: SECRETS
+        IAMAuth: DISABLED
+        SecretArn: !GetAtt [YourSecretsManagerSecret, Arn]  # Replace with your Secrets Manager secret
+      Tags:
+        - Key: Name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-db-proxy"
+  RDSProxyTargetGroup:
+    Type: AWS::RDS::DBProxyTargetGroup
+    Properties:
+      DBProxyName: !Ref RDSProxy
+      TargetGroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-default-target-group"
+      ConnectionPoolConfig:
+        ConnectionBorrowTimeout: 120
+        MaxConnectionsPercent: 100
+        MaxIdleConnectionsPercent: 50

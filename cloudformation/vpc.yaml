@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  Prefix:
+    Type: String
+    Default: ns
+  ProjectName:
+    Type: String
+    Default: test
+  Environment:
+    Type: String
+    Default: dev
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: env
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-vpc"
+#  InternetGateway:
+#    Type: AWS::EC2::InternetGateway
+#    Properties:
+#      Tags:
+#        - Key: env
+#          Value: !Ref Environment
+#        - Key: name
+#          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-internet-gateway"
+#        - Key: terraform
+#          Value: true
+#  EIP:
+#    Type: AWS::EC2::EIP
+#    Properties:
+#      Domain: vpc
+#      Tags:
+#        - Key: env
+#          Value: !Ref Environment
+#        - Key: name
+#          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-eip"
+#        - Key: terraform
+#          Value: true
+#  NatGateway:
+#    Type: AWS::EC2::NatGateway
+#    Properties:
+#      AllocationId: !GetAtt [EIP, AllocationId]
+#      SubnetId: !Ref PublicSubnet
+#      Tags:
+#        - Key: env
+#          Value: !Ref Environment
+#        - Key: Name
+#          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-nat-gateway"
+#        - Key: Terraform
+#          Value: true
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.10.0/24"
+      AvailabilityZone: "ap-northeast-1a"
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: env
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-public-subnet"
+#  PublicRouteTable:
+#    Type: AWS::EC2::RouteTable
+#    Properties:
+#      VpcId: !Ref VPC
+#      Tags:
+#        - Key: env
+#          Value: !Ref Environment
+#        - Key: Name
+#          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-public-route-table"
+#        - Key: terraform
+#          Value: true
+#  PublicRouteTableAssociation:
+#    Type: AWS::EC2::SubnetRouteTableAssociation
+#    Properties:
+#      SubnetId: !Ref PublicSubnet
+#      RouteTableId: !Ref PublicRouteTable
+#  InternetRoute:
+#    Type: AWS::EC2::Route
+#    Properties:
+#      DestinationCidrBlock: "0.0.0.0/0"
+#      RouteTableId: !Ref PublicRouteTable
+#      GatewayId: !Ref InternetGateway
+  PrivateSubnet1a:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.11.0/24"
+      AvailabilityZone: "ap-northeast-1a"
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: env
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub "${Prefix}-${ProjectName}-${
