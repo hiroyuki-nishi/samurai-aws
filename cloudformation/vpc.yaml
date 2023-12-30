@@ -65,7 +65,7 @@ Resources:
         - Key: env
           Value: !Ref Environment
         - Key: Name
-          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-public-subnet"
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-public-subnet-1a"
 #  PublicRouteTable:
 #    Type: AWS::EC2::RouteTable
 #    Properties:
@@ -99,4 +99,4 @@ Resources:
         - Key: env
           Value: !Ref Environment
         - Key: Name
-          Value: !Sub "${Prefix}-${ProjectName}-${
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-private-subnet-1a"
