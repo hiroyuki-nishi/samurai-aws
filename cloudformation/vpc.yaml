@@ -100,3 +100,15 @@ Resources:
           Value: !Ref Environment
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-private-subnet-1a"
+  PrivateSubnet1c:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.21.0/24"
+      AvailabilityZone: "ap-northeast-1c"
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: env
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-private-subnet-1c"
