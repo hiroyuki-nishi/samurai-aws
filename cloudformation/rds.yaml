@@ -52,8 +52,8 @@ Resources:
   RDSCluster:
     Type: AWS::RDS::DBCluster
     Properties:
-      AllowMajorVersionUpgrade: true
-      ApplyImmediately: true
+#      AllowMajorVersionUpgrade: true
+#      ApplyImmediately: true
       BackupRetentionPeriod: 7
       DBClusterIdentifier: !Sub "${Prefix}-${ProjectName}-${Environment}-aurora-postgresql-cluster"
       DatabaseName: !Ref DatabaseName
@@ -67,7 +67,7 @@ Resources:
       Port: 5432
       PreferredBackupWindow: "17:00-18:00"
       PreferredMaintenanceWindow: "sat:18:00-sat:19:00"
-      SkipFinalSnapshot: true
+#      SkipFinalSnapshot: true
       StorageEncrypted: true
       DBSubnetGroupName: !Ref DBSubnetGroup
       VpcSecurityGroupIds:
