@@ -15,6 +15,10 @@ Parameters:
     Type: String
   VPCPrivateSubnetIds:
     Type: List<String>
+  RDSClusterSecurityGroup :
+    Type: String
+#  RDSProxySecurityGroup:
+#    Type: String
 Resources:
   RDSClusterParameterGroup:
     Type: AWS::RDS::DBClusterParameterGroup
@@ -41,11 +45,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-db-subnet-group"
-  RDSInstanceSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: "Security group for RDS cluster instances"
-      VpcId: !Ref VPCId
   RDSCluster:
     Type: AWS::RDS::DBCluster
     Properties:
@@ -68,7 +67,7 @@ Resources:
       StorageEncrypted: true
       DBSubnetGroupName: !Ref DBSubnetGroup
       VpcSecurityGroupIds:
-        - !GetAtt [RDSInstanceSecurityGroup, GroupId]
+        - !GetAtt [RDSClusterSecurityGroup, GroupId]
       Tags:
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-aurora-postgresql-cluster"
@@ -81,40 +80,33 @@ Resources:
       Engine: aurora-postgresql
       EngineVersion: "13.8"
       InstanceClass: db.t4g.medium
-      MonitoringRoleArn: !GetAtt [YourMonitoringRole, Arn]  # Replace with your monitoring role
-      MonitoringInterval: 60
       Tags:
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-rds-cluster-instance"
-  RDSClusterInstanceSecurityGroupIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !GetAtt [RDSInstanceSecurityGroup, GroupId]
-      SourceSecurityGroupId: !GetAtt [YourAppSecurityGroup, GroupId]  # Replace with your application security group
-  RDSProxy:
-    Type: AWS::RDS::DBProxy
-    Properties:
-      DBProxyName: !Sub "${Prefix}-${ProjectName}-${Environment}-db-proxy"
-      EngineFamily: POSTGRESQL
-      IdleClientTimeout: 1800
-      RequireTLS: false
-      RoleArn: !GetAtt [YourProxyRole, Arn]  # Replace with your proxy role
-      VpcSecurityGroupIds:
-        - !GetAtt [YourProxySecurityGroup, GroupId]  # Replace with your proxy security group
-      VpcSubnetIds: !Ref VPCPrivateSubnetIds
-      Auth:
-        AuthScheme: SECRETS
-        IAMAuth: DISABLED
-        SecretArn: !GetAtt [YourSecretsManagerSecret, Arn]  # Replace with your Secrets Manager secret
-      Tags:
-        - Key: Name
-          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-db-proxy"
-  RDSProxyTargetGroup:
-    Type: AWS::RDS::DBProxyTargetGroup
-    Properties:
-      DBProxyName: !Ref RDSProxy
-      TargetGroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-default-target-group"
-      ConnectionPoolConfig:
-        ConnectionBorrowTimeout: 120
-        MaxConnectionsPercent: 100
-        MaxIdleConnectionsPercent: 50
+#  RDSProxy:
+#    Type: AWS::RDS::DBProxy
+#    Properties:
+#      DBProxyName: !Sub "${Prefix}-${ProjectName}-${Environment}-db-proxy"
+#      EngineFamily: POSTGRESQL
+#      IdleClientTimeout: 1800
+#      RequireTLS: false
+#      RoleArn: !GetAtt [YourProxyRole, Arn]  # TODO Replace with your proxy role
+#      VpcSecurityGroupIds:
+#        - !GetAtt [RDSProxySecurityGroup, GroupId]
+#      VpcSubnetIds: !Ref VPCPrivateSubnetIds
+#      Auth:
+#        AuthScheme: SECRETS
+#        IAMAuth: DISABLED
+#        SecretArn: !GetAtt [YourSecretsManagerSecret, Arn]  # TODO Replace with your Secrets Manager secret
+#      Tags:
+#        - Key: Name
+#          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-db-proxy"
+#  RDSProxyTargetGroup:
+#    Type: AWS::RDS::DBProxyTargetGroup
+#    Properties:
+#      DBProxyName: !Ref RDSProxy
+#      TargetGroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-default-target-group"
+#      ConnectionPoolConfig:
+#        ConnectionBorrowTimeout: 120
+#        MaxConnectionsPercent: 100
+#        MaxIdleConnectionsPercent: 50
