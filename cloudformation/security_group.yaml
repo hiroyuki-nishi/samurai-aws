@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  Prefix:
+    Type: String
+    Default: ns
+  ProjectName:
+    Type: String
+    Default: test
+  Environment:
+    Type: String
+    Default: dev
+  VPCId:
+    Type: String
+Resources:
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-bastion"
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - Description: "allow ssh connection"
+          IpProtocol: "tcp"
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "121.86.25.100/32"
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          FromPort: 0
+          ToPort: 0
+          CidrIp: "0.0.0.0/0"
+      Tags:
+        - Key: env
+          Value: !Ref Environment
+        - Key: name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-bastion"
+  LambdasSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-lambdas-security-group"
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: "-1"
+          FromPort: 0
+          ToPort: 0
+          CidrIp: "0.0.0.0/0"
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          FromPort: 0
+          ToPort: 0
+          CidrIp: "0.0.0.0/0"
+      Tags:
+        - Key: env
+          Value: !Ref Environment
+        - Key: name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-lambdas-security-group"
+  RDSClusterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-for-rds-cluster-sg"
+      VpcId: !Ref VPCId
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          FromPort: 0
+          ToPort: 0
+          CidrIp: "0.0.0.0/0"
+      Tags:
+        - Key: env
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-for-rds-cluster-sg"
+  RDSProxySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-for-rds-proxy"
+      VpcId: !Ref VPCId
+      SecurityGroupEgress: # FIXME
+        - IpProtocol: "-1"
+          FromPort: 0
+          ToPort: 0
+          CidrIp: "0.0.0.0/0"
+      Tags:
+        - Key: env
+          Value: !Ref Environment
+        - Key: Name
+          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-for-rds-proxy"
+  RDSSecurityGroupRuleFromBastion:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt [RDSClusterSecurityGroup, GroupId]
+      IpProtocol: "tcp"
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !GetAtt [BastionSecurityGroup, GroupId]
+      DependsOn: RDSClusterSecurityGroup
+  RDSSecurityGroupRuleFromRDSProxy:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt [RDSProxySecurityGroup, GroupId]
+      IpProtocol: "tcp"
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !GetAtt [BastionSecurityGroup, GroupId]
+      DependsOn: RDSProxySecurityGroup
+  RDSSecurityGroupRuleFromLambdas:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt [RDSProxySecurityGroup, GroupId]
+      IpProtocol: "tcp"
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId:

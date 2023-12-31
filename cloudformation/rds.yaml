@@ -11,6 +11,8 @@ Parameters:
     Default: dev
   DatabaseName:
     Type: String
+  VPCId:
+    Type: String
   VPCPrivateSubnetIds:
     Type: List<String>
 Resources:
@@ -43,7 +45,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Security group for RDS cluster instances"
-      VpcId: !Ref YourVPCId  # Replace with your VPC ID
+      VpcId: !Ref VPCId
   RDSCluster:
     Type: AWS::RDS::DBCluster
     Properties:
@@ -58,7 +60,7 @@ Resources:
       EngineMode: provisioned
       EngineVersion: "13.8"
       MasterUsername: !Sub "${Environment}_master_user"
-      MasterUserPassword: "your_password_here"  # Replace with the actual password
+      MasterUserPassword: "admin123"
       Port: 5432
       PreferredBackupWindow: "17:00-18:00"
       PreferredMaintenanceWindow: "sat:18:00-sat:19:00"
