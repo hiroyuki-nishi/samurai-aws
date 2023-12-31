@@ -15,6 +15,7 @@ Resources:
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupDescription: "EC2 Security Group for Bastion Host"
       GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-bastion"
       VpcId: !Ref VPCId
       SecurityGroupIngress:
@@ -36,6 +37,7 @@ Resources:
   LambdasSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupDescription: "EC2 Security Group for Lambdas"
       GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-lambdas-security-group"
       VpcId: !Ref VPCId
       SecurityGroupIngress:
@@ -56,6 +58,7 @@ Resources:
   RDSClusterSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupDescription: "Security group for RDS cluster instances"
       GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-for-rds-cluster-sg"
       VpcId: !Ref VPCId
       SecurityGroupEgress:
@@ -71,6 +74,7 @@ Resources:
   RDSProxySecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupDescription: "Security group for RDS Proxy"
       GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-for-rds-proxy"
       VpcId: !Ref VPCId
       SecurityGroupEgress: # FIXME
