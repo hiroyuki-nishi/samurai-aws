@@ -11,6 +11,7 @@ Parameters:
     Default: dev
   DatabaseName:
     Type: String
+    Description: "Database name. alphanumeric (A-Za-z0-9)"
   VPCId:
     Type: String
   VPCPrivateSubnetIds:
@@ -83,7 +84,7 @@ Resources:
       DBParameterGroupName: !Ref DBParameterGroup
       Engine: aurora-postgresql
       EngineVersion: "13.8"
-      InstanceClass: db.t4g.medium
+      DBInstanceClass: db.t4g.medium
       Tags:
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-rds-cluster-instance"
