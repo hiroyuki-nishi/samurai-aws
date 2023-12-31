@@ -9,15 +9,13 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-  VPCId:
-    Type: String
 Resources:
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "EC2 Security Group for Bastion Host"
       GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-bastion"
-      VpcId: !Ref VPCId
+      VpcId: !ImportValue VPC
       SecurityGroupIngress:
         - Description: "allow ssh connection"
           IpProtocol: "tcp"
@@ -39,7 +37,7 @@ Resources:
     Properties:
       GroupDescription: "EC2 Security Group for Lambdas"
       GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-lambdas-security-group"
-      VpcId: !Ref VPCId
+      VpcId: !ImportValue VPC
       SecurityGroupIngress:
         - IpProtocol: "-1"
           FromPort: 0
@@ -60,7 +58,7 @@ Resources:
     Properties:
       GroupDescription: "Security group for RDS cluster instances"
       GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-for-rds-cluster-sg"
-      VpcId: !Ref VPCId
+      VpcId: !ImportValue VPC
       SecurityGroupEgress:
         - IpProtocol: "-1"
           FromPort: 0
@@ -76,7 +74,7 @@ Resources:
     Properties:
       GroupDescription: "Security group for RDS Proxy"
       GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-for-rds-proxy"
-      VpcId: !Ref VPCId
+      VpcId: !ImportValue VPC
       SecurityGroupEgress: # FIXME
         - IpProtocol: "-1"
           FromPort: 0

@@ -112,3 +112,9 @@ Resources:
           Value: !Ref Environment
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-private-subnet-1c"
+
+Outputs:
+  VPC:
+    Value: !Ref VPC
+    Export:
+      Name: VPC
