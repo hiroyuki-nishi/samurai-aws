@@ -15,7 +15,7 @@ Parameters:
     Type: String
   VPCPrivateSubnetIds:
     Type: List<String>
-  RDSClusterSecurityGroup :
+  RDSClusterSecurityGroupId :
     Type: String
 #  RDSProxySecurityGroup:
 #    Type: String
@@ -26,6 +26,8 @@ Resources:
       DBClusterParameterGroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-rds-cluster-pg"
       Family: aurora-postgresql13
       Description: "RDS default cluster parameter group"
+      Parameters:
+        timezone: Asia/Tokyo
       Tags:
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-rds-cluster-pg"
@@ -34,6 +36,7 @@ Resources:
     Properties:
       DBParameterGroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-db-parameter-group"
       Family: aurora-postgresql13
+      Description: "RDS default parameter group"
       Tags:
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-db-parameter-group"
@@ -42,6 +45,7 @@ Resources:
     Properties:
       DBSubnetGroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-db-subnet-group"
       SubnetIds: !Ref VPCPrivateSubnetIds
+      DBSubnetGroupDescription: "RDS default subnet group"
       Tags:
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-db-subnet-group"
@@ -67,7 +71,7 @@ Resources:
       StorageEncrypted: true
       DBSubnetGroupName: !Ref DBSubnetGroup
       VpcSecurityGroupIds:
-        - !GetAtt [RDSClusterSecurityGroup, GroupId]
+        - !Ref RDSClusterSecurityGroupId
       Tags:
         - Key: Name
           Value: !Sub "${Prefix}-${ProjectName}-${Environment}-aurora-postgresql-cluster"
