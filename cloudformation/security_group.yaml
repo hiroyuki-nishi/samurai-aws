@@ -13,25 +13,12 @@ Resources:
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "EC2 Security Group for Bastion Host"
-      GroupName: !Sub "${Prefix}-${ProjectName}-${Environment}-bastion"
+      GroupDescription: !Sub ${Prefix}-${ProjectName}-bastion
       VpcId: !ImportValue VPC
-      SecurityGroupIngress:
-        - Description: "allow ssh connection"
-          IpProtocol: "tcp"
-          FromPort: 22
-          ToPort: 22
-          CidrIp: "121.86.25.100/32"
-      SecurityGroupEgress:
-        - IpProtocol: "-1"
-          FromPort: 0
-          ToPort: 0
-          CidrIp: "0.0.0.0/0"
       Tags:
-        - Key: env
-          Value: !Ref Environment
-        - Key: name
-          Value: !Sub "${Prefix}-${ProjectName}-${Environment}-bastion"
+        - Key: Name
+          Value: !Sub ${Prefix}-${ProjectName}-bastion
+
   LambdasSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -92,7 +79,7 @@ Resources:
       IpProtocol: "tcp"
       FromPort: 5432
       ToPort: 5432
-      SourceSecurityGroupId: !GetAtt [BastionSecurityGroup, GroupId]
+      SourceSecurityGroupId: !Ref BastionSecurityGroup
   RDSSecurityGroupRuleFromRDSProxy:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -109,3 +96,19 @@ Resources:
       FromPort: 5432
       ToPort: 5432
       SourceSecurityGroupId: !GetAtt [LambdasSecurityGroup, GroupId]
+  # Session Manager 向けに 443 を許可
+  BastionSGEgressAllowHttps:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !GetAtt BastionSecurityGroup.GroupId
+      CidrIp: 0.0.0.0/0
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      Description: Session Manager (https)
+
+Outputs:
+  BastionSecurityGroup:
+    Value: !Ref BastionSecurityGroup
+    Export:
+      Name: BastionSecurityGroup
