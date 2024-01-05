@@ -11,6 +11,10 @@ Parameters:
   Environment:
     Type: String
     Default: dev
+  InstanceType:
+    Description: Instance type
+    Type: String
+    Default: t4g.nano
 
 Resources:
   BastionInstanceRole:
@@ -40,7 +44,7 @@ Resources:
   BastionInstance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-01b32aa8589df6208
+      ImageId: ami-0dee43a4abd99c264
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
@@ -50,7 +54,7 @@ Resources:
             Encrypted: true
       EbsOptimized: true
       IamInstanceProfile: !Ref BastionInstanceProfile
-      InstanceType: t2.nano
+      InstanceType: !Ref InstanceType
       CreditSpecification:
         CPUCredits: unlimited
       SubnetId: !ImportValue PublicSubnet
@@ -60,7 +64,7 @@ Resources:
       UserData: !Base64 |
         #!/bin/bash
         sudo yum -y update
-        sudo yum install -y postgresql15.x86_64
+        sudo yum install -y postgresql
       Tags:
         - Key: Name
           Value: !Sub ${Prefix}-${ProjectName}-bastion
