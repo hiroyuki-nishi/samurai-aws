@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Bastion
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: ns
+  ProjectName:
+    Type: String
+    Default: test
+  Environment:
+    Type: String
+    Default: dev
+  InstanceType:
+    Description: Instance type
+    Type: String
+    Default: t4g.nano
+
+Resources:
+  BastionInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${Prefix}-${ProjectName}-bastion
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        # Session Manager 用
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  # インスタンスプロファイル
+  BastionInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [ !Ref BastionInstanceRole ]
+      InstanceProfileName: !Sub ${Prefix}-${ProjectName}-bastion
+
+  # EC2 インスタンス
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0dee43a4abd99c264
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 8
+            VolumeType: gp3
+            DeleteOnTermination: true
+            Encrypted: true
+      EbsOptimized: true
+      IamInstanceProfile: !Ref BastionInstanceProfile
+      InstanceType: !Ref InstanceType
+      CreditSpecification:
+        CPUCredits: unlimited
+      SubnetId: !ImportValue PublicSubnet
+      SecurityGroupIds: [ !ImportValue BastionSecurityGroup ]
+      SourceDestCheck: true
+      DisableApiTermination: false
+      UserData: !Base64 |
+        #!/bin/bash
+        sudo yum -y update
+        sudo yum install -y postgresql
+      Tags:
+        - Key: Name
+          Value: !Sub ${Prefix}-${ProjectName}-bastion
