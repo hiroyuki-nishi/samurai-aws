@@ -18,8 +18,6 @@ Parameters:
     Type: List<String>
   RDSClusterSecurityGroupId :
     Type: String
-#  RDSProxySecurityGroup:
-#    Type: String
 Resources:
   RDSClusterParameterGroup:
     Type: AWS::RDS::DBClusterParameterGroup
