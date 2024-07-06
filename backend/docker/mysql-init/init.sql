@@ -9,8 +9,3 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- 日本語名のデータを追加
-INSERT INTO users (name, email) VALUES ('山田太郎', 'taro.yamada@example.com');
-INSERT INTO users (name, email) VALUES ('鈴木花子', 'hanako.suzuki@example.com');
-INSERT INTO users (name, email) VALUES ('佐藤一郎', 'ichiro.sato@example.com');
