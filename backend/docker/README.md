@@ -52,6 +52,7 @@ docker-compose up -d
 コンテナが正常に起動したら、MySQLに接続して設定が正しく適用されているか確認します。
 
 ```
+docker exec -it docker-db-1 bash
 mysql -h 127.0.0.1 -P 3306 -u root -p
 ```
 パスワードを入力後、以下のコマンドでデータベースとテーブルの文字セットを確認します。
