@@ -23,10 +23,46 @@ except pymysql.MySQLError as e:
 
 logger.info("SUCCESS: Connection to RDS for MySQL instance succeeded")
 
+def create_select_sql(params):
+    base_query = "SELECT * FROM my_table"
+
+    if params:
+        conditions = []
+        price_conditions = []
+
+        for param in params:
+            for key, value in param.items():
+                if value is not None:
+                    if key == "lunch_price_lower":
+                        price_conditions.append(f"lunch_price >= {value}")
+                    elif key == "lunch_price_higher":
+                        price_conditions.append(f"lunch_price <= {value}")
+                    else:
+                        conditions.append(f"{key} = {value}")
+
+        if price_conditions:
+            conditions.extend(price_conditions)
+
+        if conditions:
+            base_query += " WHERE " + " AND ".join(conditions)
+
+    return base_query
+
+
 def lambda_handler(event, context):
     item_count = 0
     names = []
     # sql_string = f"insert into Customer (CustID, Name) values(%s, %s)"
+    # クエリパラメータの例
+    params = [
+        # {"shop_name": "XXX"},
+        {"lunch_price_lower": 1000},
+        {"lunch_price_higher": 2000}
+    ]
+    
+    # SQLクエリを作成
+    sql_query = create_select_sql(params)
+    print(sql_query)
 
     with conn.cursor() as cur:
         cur.execute("select * from users")
