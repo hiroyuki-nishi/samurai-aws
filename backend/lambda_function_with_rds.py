@@ -33,12 +33,12 @@ def create_select_sql(params):
         for param in params:
             for key, value in param.items():
                 if value is not None:
-                    if key == "lunch_price_lower":
+                    if key == "shop_name":
+                        price_conditions.append(f"{key} =LIKE '%{value}%'")
+                    elif key == "lunch_price_lower":
                         price_conditions.append(f"lunch_price >= {value}")
                     elif key == "lunch_price_higher":
                         price_conditions.append(f"lunch_price <= {value}")
-                    else:
-                        conditions.append(f"{key} = {value}")
 
         if price_conditions:
             conditions.extend(price_conditions)
